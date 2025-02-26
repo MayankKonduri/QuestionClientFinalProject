@@ -95,6 +95,20 @@ public class TeacherHome extends JPanel {
             reportsButton.setBounds(50, 170, 300, 40);
             add(reportsButton);
 
+            reportsButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    ReportsHome reportsHome = new ReportsHome(frame, userName);
+
+                    frame.getContentPane().removeAll();
+                    frame.revalidate();
+                    frame.repaint();
+                    frame.setSize(500, 500);
+                    frame.add(reportsHome);
+                    frame.setVisible(true);
+                }
+            });
+
             JButton settingsButton = new JButton("Settings");
             settingsButton.setFont(new Font("Georgia", Font.BOLD, 16));
             settingsButton.setBounds(50, 220, 300, 40);
@@ -111,6 +125,7 @@ public class TeacherHome extends JPanel {
                     int pWaitTime = Integer.parseInt(temp1[3]);
 
                     JDialog dialog = new JDialog(frame, "Settings", true);
+
                     dialog.setLayout(new GridBagLayout());
                     GridBagConstraints gbc = new GridBagConstraints();
                     gbc.insets = new Insets(10, 10, 10, 10);

@@ -48,7 +48,7 @@ public class QuestionViewer extends JPanel {
 
         JButton homeButton = new JButton("Home");
         homeButton.setFont(new Font("Georgia", Font.BOLD, 10));
-        homeButton.setBounds(15, 10, 65, 20);
+        homeButton.setBounds(15, 10, 70, 20);
         homeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
