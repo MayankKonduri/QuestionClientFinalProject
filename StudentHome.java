@@ -13,10 +13,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.nio.file.Files;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -404,11 +402,9 @@ public class StudentHome extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 ArrayList<Object[]> threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
                 ArrayList<Object[]> allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
-                System.out.println("Number of Unread Threes: " + threeMessageStatus.size() + " and Number of Read Zeroes: " + allButThreesMessageStatus.size());
                 updateImageButtonUI(true);
-                System.out.println("Image Clicked");
                 databaseManager.resetSeenSample(questionTableName, userName, 0);
-                showPopUp(frame);
+                showPopUp(frame, threeMessageStatus, allButThreesMessageStatus, questionTable, userName);
             }
         });
 
@@ -474,7 +470,30 @@ public class StudentHome extends JPanel {
             imageButton.setBounds(90, 10, 80, 30);
         }
     }
-    private void showPopUp(JFrame frame) {
+    private void showPopUp(JFrame frame, ArrayList<Object[]> threeMessageStatus, ArrayList<Object[]> allButThreesMessageStatus, JTable questionTable, String userName) {
+        System.out.println("Number of Unread Threes: " + threeMessageStatus.size() + " and Number of Read Zeroes: " + allButThreesMessageStatus.size());
+        System.out.println("Image Clicked");
+        int countTodayThrees = 0;
+        int countTodayZeroes = 0;
+
+        LocalDate currentDate = LocalDate.now();
+        for(int i=0;i<threeMessageStatus.size();i++){
+            Timestamp timestamp = (Timestamp) threeMessageStatus.get(i)[4];
+            LocalDate messageDate = timestamp.toLocalDateTime().toLocalDate();
+            if (messageDate.equals(currentDate)) {
+                countTodayThrees++;
+            }
+        }
+        for(int i=0;i<allButThreesMessageStatus.size();i++){
+            Timestamp timestamp = (Timestamp) allButThreesMessageStatus.get(i)[4];
+            LocalDate messageDate = timestamp.toLocalDateTime().toLocalDate();
+            if (messageDate.equals(currentDate)) {
+                countTodayZeroes++;
+            }
+        }
+        System.out.println("Number of Unread Threes from Today: " + countTodayThrees);
+        System.out.println("Number of Read Zeroes from Today: " + countTodayZeroes);
+
         if(messagePopup != null && messagePopup.isVisible()){
             return;
         }
@@ -1073,7 +1092,7 @@ public class StudentHome extends JPanel {
                             previewPanel.setBackground(Color.BLACK);
                             previewPanel.add(previewScrollPane, BorderLayout.CENTER);
 
-                            JOptionPane.showMessageDialog(null, previewPanel, "ðŸ“œ Code Preview", JOptionPane.PLAIN_MESSAGE);
+                            JOptionPane.showMessageDialog(null, previewPanel, "Code Preview", JOptionPane.PLAIN_MESSAGE);
 
                             successful_1 = true;
 

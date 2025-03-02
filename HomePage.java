@@ -252,7 +252,8 @@ public class HomePage extends JPanel {
                     "FileName VARCHAR(200)," +
                     "AttachedCodeFile LONGBLOB," +
                     "ConsoleOutput LONGTEXT," +
-                    "SeenResponse INT" +
+                    "SeenResponse INT," +
+                    "DateOfQuestion DATETIME" +
                     ")";
 
             statement.executeUpdate(createTableSQL);

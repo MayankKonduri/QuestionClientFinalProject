@@ -571,7 +571,7 @@ public class DatabaseManager {
 
         try {
             String insertSQL = "INSERT INTO " + tableName +
-                    " (StudentID, QuestionSummary, TimeStamp, IsQuestionActive, Response, AttachedCodeFile, ConsoleOutput, FileName) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    " (StudentID, QuestionSummary, TimeStamp, IsQuestionActive, Response, AttachedCodeFile, ConsoleOutput, FileName, DateOfQuestion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
             String DATABASE_USER = "root";
@@ -594,6 +594,9 @@ public class DatabaseManager {
 
             preparedStatement.setString(7, consoleErrorOutput);
             preparedStatement.setString(8, FileName);
+
+            java.util.Date dateOfQuestion = new java.util.Date();
+            preparedStatement.setTimestamp(9, new java.sql.Timestamp(dateOfQuestion.getTime()));
 
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected > 0) {
@@ -969,8 +972,8 @@ public class DatabaseManager {
         return result;
     }
     public Object[] getSeenMessageStatus(String questionTableName, String userName) {
-        Object[] result = new Object[4];
-            String query = "SELECT StudentID, QuestionSummary, TimeStamp, Response, SeenResponse " + "FROM " + questionTableName + " " + "WHERE StudentID = ? AND SeenResponse != 0 AND SeenResponse != 3";
+        Object[] result = new Object[5];
+            String query = "SELECT StudentID, QuestionSummary, TimeStamp, Response, SeenResponse, DateOfQuestion " + "FROM " + questionTableName + " " + "WHERE StudentID = ? AND SeenResponse != 0 AND SeenResponse != 3";
 
         try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
             PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -982,6 +985,7 @@ public class DatabaseManager {
                     result[1] = timeStamp != null ? timeStamp.toString() : null;
                     result[2] = rs.getString("Response");
                     result[3] = rs.getInt("SeenResponse");
+                    result[4] = rs.getTimestamp("DateOfQuestion");
                 } else {
                     result = null;
                 }
@@ -996,19 +1000,20 @@ public class DatabaseManager {
 
     public ArrayList<Object[]> getThrees(String questionTableName, String userName) {
         ArrayList<Object[]> finalResult = new ArrayList<>();
-        String query = "SELECT StudentID, QuestionSummary, TimeStamp, Response, SeenResponse " + "FROM " + questionTableName + " " + "WHERE StudentID = ? AND SeenResponse = 3";
+        String query = "SELECT StudentID, QuestionSummary, TimeStamp, Response, SeenResponse, DateOfQuestion " + "FROM " + questionTableName + " " + "WHERE StudentID = ? AND SeenResponse = 3";
 
         try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, userName);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Object[] result = new Object[4];
+                    Object[] result = new Object[5];
                     result[0] = rs.getString("QuestionSummary");
                     Time timeStamp = rs.getTime("TimeStamp");
                     result[1] = timeStamp != null ? timeStamp.toString() : null;
                     result[2] = rs.getString("Response");
                     result[3] = rs.getInt("SeenResponse");
+                    result[4] = rs. getTimestamp("DateOfQuestion");
 
                     finalResult.add(result);
                 }
@@ -1034,19 +1039,20 @@ public class DatabaseManager {
     }
     public ArrayList<Object[]> getAllButThrees(String questionTableName, String userName) {
         ArrayList<Object[]> finalResult1 = new ArrayList<>();
-        String query = "SELECT StudentID, QuestionSummary, TimeStamp, Response, SeenResponse " + "FROM " + questionTableName + " " + "WHERE StudentID = ? AND SeenResponse = 0";
+        String query = "SELECT StudentID, QuestionSummary, TimeStamp, Response, SeenResponse, DateOfQuestion " + "FROM " + questionTableName + " " + "WHERE StudentID = ? AND SeenResponse = 0";
 
         try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, userName);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Object[] result = new Object[4];
+                    Object[] result = new Object[5];
                     result[0] = rs.getString("QuestionSummary");
                     Time timeStamp = rs.getTime("TimeStamp");
                     result[1] = timeStamp != null ? timeStamp.toString() : null;
                     result[2] = rs.getString("Response");
                     result[3] = rs.getInt("SeenResponse");
+                    result[4] = rs.getTimestamp("DateOfQuestion");
 
                     finalResult1.add(result);
                 }
