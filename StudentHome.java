@@ -402,9 +402,12 @@ public class StudentHome extends JPanel {
         imageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                databaseManager.resetSeenSample(questionTableName, userName, 0);
+                ArrayList<Object[]> threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
+                ArrayList<Object[]> allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
+                System.out.println("Number of Unread Threes: " + threeMessageStatus.size() + " and Number of Read Zeroes: " + allButThreesMessageStatus.size());
                 updateImageButtonUI(true);
                 System.out.println("Image Clicked");
+                databaseManager.resetSeenSample(questionTableName, userName, 0);
                 showPopUp(frame);
             }
         });
@@ -635,6 +638,8 @@ public class StudentHome extends JPanel {
                         position = databaseManager.getQuestionPosition(questionTableName, userName);
 
                         Object[] seenMessageStatus = databaseManager.getSeenMessageStatus(questionTableName, userName);
+                        ArrayList<Object[]> threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
+                        System.out.println("ThreesStatus" + threeMessageStatus.size());
                         if(seenMessageStatus!= null) {
                             if ((int) seenMessageStatus[3] == 2) {
                                 String message = "Teacher Removed Your Question";
@@ -687,10 +692,10 @@ public class StudentHome extends JPanel {
                                 updateImageButtonUI(false);
                                 JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
                                 databaseManager.resetSeenSample(questionTableName, userName, 3);
-                            } else if ((int) seenMessageStatus[3] == 3){
-                                updateImageButtonUI(false);
-                                System.out.println("Testing 3");
                             }
+                        } else if (threeMessageStatus.size()>0){
+                            updateImageButtonUI(false);
+                            System.out.println("Number of Unread: " + threeMessageStatus.size());
                         }
                         positionLabel.setText("Position: " + position);
                         if(position==-1)
