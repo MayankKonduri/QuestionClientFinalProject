@@ -449,6 +449,7 @@ public class StudentHome extends JPanel {
                                 JTextPane textPane = new JTextPane();
                                 textPane.setEditable(false);
                                 textPane.setFont(new Font("Georgia", Font.PLAIN, 12));
+                                textPane.setBorder(new LineBorder(Color.BLACK, 1));
                                 StyledDocument doc = textPane.getStyledDocument();
                                 SimpleAttributeSet boldStyle = new SimpleAttributeSet();
                                 StyleConstants.setBold(boldStyle, true);
@@ -478,6 +479,7 @@ public class StudentHome extends JPanel {
                                 JTextPane textPane = new JTextPane();
                                 textPane.setEditable(false);
                                 textPane.setFont(new Font("Georgia", Font.PLAIN, 12));
+                                textPane.setBorder(new LineBorder(Color.BLACK, 1));
                                 StyledDocument doc = textPane.getStyledDocument();
                                 SimpleAttributeSet boldStyle = new SimpleAttributeSet();
                                 StyleConstants.setBold(boldStyle, true);
