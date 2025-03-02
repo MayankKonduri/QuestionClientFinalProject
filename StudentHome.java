@@ -6,6 +6,9 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumnModel;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -518,7 +521,7 @@ public class StudentHome extends JPanel {
         int popupX = frame.getX() + frameWidth/2;
         int popupY = frame.getY();
 
-        messagePopup.setBounds(popupX+20, popupY+ 60, popupWidth-30, popupHeight-80);
+        messagePopup.setBounds(popupX-20, popupY+ 60, popupWidth+10, popupHeight-80);
         messagePopup.setUndecorated(true);
 
         JPanel contentPanel = new JPanel();
@@ -553,14 +556,14 @@ public class StudentHome extends JPanel {
 
         JLabel titleLabel = new JLabel("Question(s) History");
         titleLabel.setForeground(Color.BLACK);
-        titleLabel.setFont(new Font("Georgia",Font.BOLD,10));
+        titleLabel.setFont(new Font("Georgia",Font.BOLD,11));
 
         shadowPanel.add(titleLabel);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 shadowPanel.setLayout(null);
-                titleLabel.setBounds(10,5,100,20);
+                titleLabel.setBounds(10,5,120,20);
             }
         });
         //shadowPanel.setBounds(5, 5, contentPanel.getWidth()-10, 27);  // Recalculate button position
@@ -572,22 +575,44 @@ public class StudentHome extends JPanel {
             }
         });
 
-        JScrollPane scrollPane = new JScrollPane();
+        String[] columns = {"Q. Summary", "Response"};
+        DefaultTableModel tableModel = new DefaultTableModel(columns,0);
+        JTable table = new JTable(tableModel);
+        table.setFillsViewportHeight(true);
+        table.setFont(new Font("Georgia", Font.PLAIN, 10));
+        table.setRowHeight(20);
+
+        JTableHeader tableHeader = table.getTableHeader();
+        tableHeader.setFont(new Font("Georgia",Font.BOLD,11));
+        tableHeader.setReorderingAllowed(false);
+        tableHeader.setPreferredSize(new Dimension(tableHeader.getWidth(), 25));
+        ((DefaultTableCellRenderer) tableHeader.getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(14, 0));
+        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 14));
+        table.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+        contentPanel.add(scrollPane);
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 scrollPane.setBounds(3,34,contentPanel.getWidth()-4,contentPanel.getHeight()-35);
             }
         });
-        contentPanel.add(scrollPane);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
-        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
 
-        JPanel panelForScrool = new JPanel();
-        panelForScrool.setLayout(new BoxLayout(panelForScrool, BoxLayout.Y_AXIS));
-        scrollPane.setViewportView(panelForScrool);
+        addRowToTable(tableModel,"Sample1", "Sample1");
+
+//        JPanel panelForScrool = new JPanel();
+//        panelForScrool.setLayout(new BoxLayout(panelForScrool, BoxLayout.Y_AXIS));
+//        scrollPane.setViewportView(panelForScrool);
         contentPanel.add(shadowPanel);
 
 
@@ -596,6 +621,8 @@ public class StudentHome extends JPanel {
 
         contentPanel.revalidate();
         contentPanel.repaint();
+
+
 
         messagePopup.add(contentPanel, BorderLayout.CENTER);
         messagePopup.setVisible(true);
@@ -606,6 +633,10 @@ public class StudentHome extends JPanel {
             }
         });
         messagePopup.setVisible(true);
+    }
+
+    private void addRowToTable(DefaultTableModel tableModel, String questionSummary, String response) {
+        tableModel.addRow(new Object[]{questionSummary, response});
     }
 
     private void startAutoRefreshThread() {
