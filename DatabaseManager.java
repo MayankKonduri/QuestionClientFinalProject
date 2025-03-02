@@ -993,11 +993,12 @@ public class DatabaseManager {
         }
         return result;
     }
-    public void resetSeenSample(String questionTableName, String studentID){
-        String query = "UPDATE " + questionTableName + " SET SeenResponse = 0 WHERE StudentID = ? AND SeenResponse != 0";
+    public void resetSeenSample(String questionTableName, String studentID, int SeenResponse){
+        String query = "UPDATE " + questionTableName + " SET SeenResponse = ? WHERE StudentID = ? AND SeenResponse != 0";
         try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
             PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, studentID);
+            stmt.setInt(1, SeenResponse);
+            stmt.setString(2, studentID);
             stmt.executeUpdate();
 
         } catch (SQLException e){

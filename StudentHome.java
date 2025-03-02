@@ -7,7 +7,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
@@ -22,7 +21,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -69,7 +67,12 @@ public class StudentHome extends JPanel {
     public boolean successful_1;
     String className;
     private int position;
-
+    public JDialog messagePopup;
+    public JButton imageButton;
+    public JPanel imagePanel;
+    public ImageIcon imageIcon;
+    public Image image;
+    public boolean readMessage;
     public StudentHome(JFrame frame, String userName) throws SQLException {
         this.frame = frame;
         this.userName = userName;
@@ -370,8 +373,41 @@ public class StudentHome extends JPanel {
         homeButton.setFont(new Font("Georgia", Font.BOLD, 10));
         homePanel.add(homeButton);
 
-        homePanel.setBounds(10, 25, 100, 100);
+        homePanel.setBounds(10, 30, 100, 100);
         add(homePanel, BorderLayout.NORTH);
+
+        imagePanel = new JPanel();
+        imagePanel.setLayout(new FlowLayout(FlowLayout.RIGHT, 5,5));
+        imagePanel.setBounds(345, 25, 50, 50);
+        imageIcon = new ImageIcon("messages2.png");
+        image = imageIcon.getImage();
+        int newWidth = (int) (image.getWidth(null) * 0.05);
+        int newHeight = (int) (image.getHeight(null) * 0.05);
+        Image resizedImage = image.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+        ImageIcon resizedIcon = new ImageIcon(resizedImage);
+
+        if(imageIcon.getImageLoadStatus() != MediaTracker.COMPLETE){
+            System.out.println("Image Failed to Load.");
+        }
+        imageButton = new JButton(resizedIcon);
+        imageButton.revalidate();
+        imageButton.repaint();
+        imageButton.setBorderPainted(false);
+        imageButton.setFocusPainted(false);
+        imageButton.setContentAreaFilled(false);
+        imageButton.setBounds(90, 10, 80, 30);
+        imagePanel.add(imageButton);
+        add(imagePanel);
+
+        imageButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                databaseManager.resetSeenSample(questionTableName, userName, 0);
+                updateImageButtonUI(true);
+                System.out.println("Image Clicked");
+                showPopUp(frame);
+            }
+        });
 
         homeButton.addActionListener(new ActionListener() {
             @Override
@@ -394,6 +430,162 @@ public class StudentHome extends JPanel {
 
         startAutoRefreshThread();
     }
+
+    private void updateImageButtonUI(boolean readMessage) {
+        if(readMessage){
+            //imagePanel.remove(imageButton);
+            imageIcon = new ImageIcon("messages2.png");
+            image = imageIcon.getImage();
+            int newWidth = (int) (image.getWidth(null) * 0.05);
+            int newHeight = (int) (image.getHeight(null) * 0.05);
+            Image resizedImage = image.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+            ImageIcon resizedIcon = new ImageIcon(resizedImage);
+
+            if (imageIcon.getImageLoadStatus() != MediaTracker.COMPLETE) {
+                System.out.println("Image Failed to Load.");
+            }
+            imageButton.setIcon(resizedIcon);
+            imageButton.revalidate();
+            imageButton.repaint();
+            imageButton.setBorderPainted(false);
+            imageButton.setFocusPainted(false);
+            imageButton.setContentAreaFilled(false);
+            imageButton.setBounds(90, 10, 80, 30);
+        }else {
+            imageIcon = new ImageIcon("unreadmessages2.png");
+            image = imageIcon.getImage();
+            int newWidth = (int) (image.getWidth(null) * 0.05);
+            int newHeight = (int) (image.getHeight(null) * 0.05);
+            Image resizedImage = image.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+            ImageIcon resizedIcon = new ImageIcon(resizedImage);
+
+            if (imageIcon.getImageLoadStatus() != MediaTracker.COMPLETE) {
+                System.out.println("Image Failed to Load.");
+            }
+            imageButton.setIcon(resizedIcon);
+            imageButton.revalidate();
+            imageButton.repaint();
+            imageButton.setBorderPainted(false);
+            imageButton.setFocusPainted(false);
+            imageButton.setContentAreaFilled(false);
+            imageButton.setBounds(90, 10, 80, 30);
+        }
+    }
+    private void showPopUp(JFrame frame) {
+        if(messagePopup != null && messagePopup.isVisible()){
+            return;
+        }
+
+        messagePopup = new JDialog(frame, "Messages", false);
+        messagePopup.setUndecorated(false);
+        messagePopup.setResizable(false);
+        messagePopup.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        messagePopup.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+        });
+
+        int frameWidth = frame.getWidth();
+        int frameHeight = frame.getHeight();
+        int popupWidth = frameWidth/2;
+        int popupHeight = frameHeight;
+
+        int popupX = frame.getX() + frameWidth/2;
+        int popupY = frame.getY();
+
+        messagePopup.setBounds(popupX+20, popupY+ 60, popupWidth-30, popupHeight-80);
+        messagePopup.setUndecorated(true);
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));  // Set a black border with thickness 2
+        contentPanel.setLayout(null);
+
+        JButton closeButton = new JButton("X");
+        closeButton.setForeground(Color.BLACK);
+        closeButton.setBackground(Color.WHITE);
+        closeButton.setFont(new Font("Verdana",Font.BOLD,8));
+        closeButton.setPreferredSize(new Dimension(40,20));
+        closeButton.setBorder(BorderFactory.createLineBorder(Color.BLACK,1));
+        closeButton.setFocusable(false);
+        //closeButton.setBounds(contentPanel.getWidth() - 50, 8, 40, 20);  // Recalculate button position
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                closeButton.setBounds(contentPanel.getWidth() - 46, 7, 40, 20);  // Recalculate button position
+            }
+        });
+        closeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                messagePopup.dispose();
+            }
+        });
+
+        JPanel shadowPanel = new JPanel();
+        shadowPanel.setBackground(Color.LIGHT_GRAY);
+        shadowPanel.setForeground(Color.BLACK);
+        shadowPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+
+        JLabel titleLabel = new JLabel("Question(s) History");
+        titleLabel.setForeground(Color.BLACK);
+        titleLabel.setFont(new Font("Georgia",Font.BOLD,10));
+
+        shadowPanel.add(titleLabel);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                shadowPanel.setLayout(null);
+                titleLabel.setBounds(10,5,100,20);
+            }
+        });
+        //shadowPanel.setBounds(5, 5, contentPanel.getWidth()-10, 27);  // Recalculate button position
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                shadowPanel.setBounds(1, 1, contentPanel.getWidth()-1, 32);  // Recalculate button position
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                scrollPane.setBounds(3,34,contentPanel.getWidth()-4,contentPanel.getHeight()-35);
+            }
+        });
+        contentPanel.add(scrollPane);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
+
+        JPanel panelForScrool = new JPanel();
+        panelForScrool.setLayout(new BoxLayout(panelForScrool, BoxLayout.Y_AXIS));
+        scrollPane.setViewportView(panelForScrool);
+        contentPanel.add(shadowPanel);
+
+
+        contentPanel.add(closeButton);
+
+
+        contentPanel.revalidate();
+        contentPanel.repaint();
+
+        messagePopup.add(contentPanel, BorderLayout.CENTER);
+        messagePopup.setVisible(true);
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentMoved(ComponentEvent e) {
+                messagePopup.setLocation((frame.getX() + frame.getWidth()/2)+20, frame.getY()+60);
+            }
+        });
+        messagePopup.setVisible(true);
+    }
+
     private void startAutoRefreshThread() {
         refreshThread = new Thread(() -> {
             while (running) {
@@ -457,16 +649,14 @@ public class StudentHome extends JPanel {
                                 SimpleAttributeSet regularStyleSet = new SimpleAttributeSet();
                                 StyleConstants.setBold(regularStyleSet, false);
                                 StyleConstants.setFontFamily(regularStyleSet, "Georgia");
-
                                 try{
                                     doc.insertString(doc.getLength(), message, boldStyle);
                                 } catch (Exception ex){
                                     ex.printStackTrace();
                                 }
-
+                                //updateImageButtonUI(false);
                                 JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
-                                databaseManager.resetSeenSample(questionTableName, userName);
-
+                                databaseManager.resetSeenSample(questionTableName, userName, 0);
                             } else if ((int) seenMessageStatus[3] == 1) {
                                 String teacherResponse = (String) seenMessageStatus[2];
                                 String message;
@@ -489,14 +679,17 @@ public class StudentHome extends JPanel {
                                 StyleConstants.setFontFamily(regularStyleSet, "Georgia");
 
                                 try{
-                                    doc.insertString(doc.getLength(), "Teacher's Response: ", boldStyle);
-                                    doc.insertString(doc.getLength(), message, regularStyleSet);
+                                    doc.insertString(doc.getLength(), "Teacher Responded to Your Question", boldStyle);
+                                    //doc.insertString(doc.getLength(), message, regularStyleSet);
                                 } catch (Exception ex){
                                     ex.printStackTrace();
                                 }
-
+                                updateImageButtonUI(false);
                                 JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
-                                databaseManager.resetSeenSample(questionTableName, userName);
+                                databaseManager.resetSeenSample(questionTableName, userName, 3);
+                            } else if ((int) seenMessageStatus[3] == 3){
+                                updateImageButtonUI(false);
+                                System.out.println("Testing 3");
                             }
                         }
                         positionLabel.setText("Position: " + position);
