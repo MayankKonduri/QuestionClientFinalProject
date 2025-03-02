@@ -406,8 +406,8 @@ public class StudentHome extends JPanel {
                 ArrayList<Object[]> threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
                 ArrayList<Object[]> allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
                 updateImageButtonUI(true);
-                databaseManager.resetSeenSample(questionTableName, userName, 0);
                 showPopUp(frame, threeMessageStatus, allButThreesMessageStatus, questionTable, userName);
+                databaseManager.resetSeenSample(questionTableName, userName, 0);
             }
         });
 
@@ -474,6 +474,8 @@ public class StudentHome extends JPanel {
         }
     }
     private void showPopUp(JFrame frame, ArrayList<Object[]> threeMessageStatus, ArrayList<Object[]> allButThreesMessageStatus, JTable questionTable, String userName) {
+        ArrayList<Object[]> todayThreeMessageStatus = new ArrayList<>();
+        ArrayList<Object[]> todayAllButThreeMessageStatus = new ArrayList<>();
         System.out.println("Number of Unread Threes: " + threeMessageStatus.size() + " and Number of Read Zeroes: " + allButThreesMessageStatus.size());
         System.out.println("Image Clicked");
         int countTodayThrees = 0;
@@ -485,6 +487,7 @@ public class StudentHome extends JPanel {
             LocalDate messageDate = timestamp.toLocalDateTime().toLocalDate();
             if (messageDate.equals(currentDate)) {
                 countTodayThrees++;
+                todayThreeMessageStatus.add(threeMessageStatus.get(i));
             }
         }
         for(int i=0;i<allButThreesMessageStatus.size();i++){
@@ -492,6 +495,7 @@ public class StudentHome extends JPanel {
             LocalDate messageDate = timestamp.toLocalDateTime().toLocalDate();
             if (messageDate.equals(currentDate)) {
                 countTodayZeroes++;
+                todayAllButThreeMessageStatus.add(allButThreesMessageStatus.get(i));
             }
         }
         System.out.println("Number of Unread Threes from Today: " + countTodayThrees);
@@ -521,7 +525,7 @@ public class StudentHome extends JPanel {
         int popupX = frame.getX() + frameWidth/2;
         int popupY = frame.getY();
 
-        messagePopup.setBounds(popupX-20, popupY+ 60, popupWidth+10, popupHeight-80);
+        messagePopup.setBounds(popupX-30, popupY+ 60, popupWidth+20, popupHeight-80);
         messagePopup.setUndecorated(true);
 
         JPanel contentPanel = new JPanel();
@@ -576,7 +580,12 @@ public class StudentHome extends JPanel {
         });
 
         String[] columns = {"Q. Summary", "Response"};
-        DefaultTableModel tableModel = new DefaultTableModel(columns,0);
+        DefaultTableModel tableModel = new DefaultTableModel(columns,0){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         JTable table = new JTable(tableModel);
         table.setFillsViewportHeight(true);
         table.setFont(new Font("Georgia", Font.PLAIN, 10));
@@ -595,6 +604,7 @@ public class StudentHome extends JPanel {
         }
 
         JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(14, 0));
         scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 14));
@@ -608,7 +618,30 @@ public class StudentHome extends JPanel {
             }
         });
 
-        addRowToTable(tableModel,"Sample1", "Sample1");
+        todayThreeMessageStatus.sort((a, b) -> ((Timestamp) b[4]).compareTo((Timestamp) a[4]));
+        for(Object[] row : todayThreeMessageStatus){
+            if(((String) row[2]).equals("Teacher Manually Removed Question")){
+                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
+            } else if(((String) row[2]).equals("Teacher Went To Student's Desk")){
+                addRowToTable(tableModel, (String) row[0], "Coming Over");
+            } else if(((String) row[2]).equals("Student Took Back Question")){
+                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
+            } else{
+                addRowToTable(tableModel, (String) row[0], (String) row[2]);
+            }
+        }
+        todayAllButThreeMessageStatus.sort((a, b) -> ((Timestamp) b[4]).compareTo((Timestamp) a[4]));
+        for(Object[] row : todayAllButThreeMessageStatus){
+            if(((String) row[2]).equals("Teacher Manually Removed Question")){
+                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
+            } else if(((String) row[2]).equals("Went to Student's Desk")){
+                addRowToTable(tableModel, (String) row[0], "Coming Over");
+            } else if(((String) row[2]).equals("Student Took Back Question")){
+                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
+            } else{
+                addRowToTable(tableModel, (String) row[0], (String) row[2]);
+            }
+        }
 
 //        JPanel panelForScrool = new JPanel();
 //        panelForScrool.setLayout(new BoxLayout(panelForScrool, BoxLayout.Y_AXIS));
@@ -622,14 +655,21 @@ public class StudentHome extends JPanel {
         contentPanel.revalidate();
         contentPanel.repaint();
 
-
+        table.getSelectionModel().addListSelectionListener(event ->{
+            if(!event.getValueIsAdjusting() && table.getSelectedRow() != -1){
+                int selectedRow = table.getSelectedRow();
+                int responseColumnIndex = 1;
+                Object responseValue = table.getValueAt(selectedRow, responseColumnIndex);
+                System.out.println("Selected Response: " + responseValue);
+            }
+        });
 
         messagePopup.add(contentPanel, BorderLayout.CENTER);
         messagePopup.setVisible(true);
         frame.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentMoved(ComponentEvent e) {
-                messagePopup.setLocation((frame.getX() + frame.getWidth()/2)+20, frame.getY()+60);
+                messagePopup.setLocation((frame.getX() + frame.getWidth()/2)-20, frame.getY()+60);
             }
         });
         messagePopup.setVisible(true);
