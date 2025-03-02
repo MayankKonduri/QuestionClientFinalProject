@@ -148,7 +148,7 @@ public class QuestionViewer extends JPanel {
                     clearQuestionListButton.setVisible(true);
                     questionTable.clearSelection();
                     String tableName4 = teacherName + "_" + periodNumber + "_questions";
-                    databaseManager.updateQuestionsTable(studentID, tableName4, "Teacher Manually Removed Question");
+                    databaseManager.updateQuestionsTable(studentID, tableName4, "Teacher Manually Removed Question", 2);
                     loadTeacherAndClasses();
                 }
             }
@@ -277,7 +277,7 @@ public class QuestionViewer extends JPanel {
 
                             comingOverButton.addActionListener(e1 -> {
                                 System.out.println("Coming Over selected");
-                                databaseManager.updateQuestionsTable(studentID, tableName3, "Went to Student's Desk");
+                                databaseManager.updateQuestionsTable(studentID, tableName3, "Went to Student's Desk", 1);
                                 loadTeacherAndClasses();
                                 SwingUtilities.getWindowAncestor(cancelButton).dispose();
 
@@ -304,7 +304,7 @@ public class QuestionViewer extends JPanel {
 
                                     System.out.println("User response: " + userResponse);
 
-                                    databaseManager.updateQuestionsTable(studentID, tableName3, userResponse);
+                                    databaseManager.updateQuestionsTable(studentID, tableName3, userResponse, 1);
                                     loadTeacherAndClasses();
                                     SwingUtilities.getWindowAncestor(cancelButton).dispose();
                                 } else {
@@ -414,7 +414,7 @@ public class QuestionViewer extends JPanel {
     }
 
     private void loadTeacherAndClasses() {
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://10.195.75.116/qclient1", "root", "password")) {
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://192.168.1.14/qclient1", "root", "password")) {
             PreparedStatement stmt = conn.prepareStatement("SELECT teacher_name FROM teacher WHERE teacher_id = ?");
             stmt.setString(1, userName);
             ResultSet rs = stmt.executeQuery();
@@ -466,7 +466,7 @@ public class QuestionViewer extends JPanel {
 
     private void loadQuestionsForCurrentPeriod(Connection existingConn) {
         try (Connection conn = existingConn != null ? existingConn :
-                DriverManager.getConnection("jdbc:mysql://10.195.75.116/qclient1", "root", "password")) {
+                DriverManager.getConnection("jdbc:mysql://192.168.1.14/qclient1", "root", "password")) {
 
             String period = classPeriods[currentIndex].split(" ")[0];
             PreparedStatement stmt = conn.prepareStatement("SELECT StudentID, QuestionSummary FROM " +

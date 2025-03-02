@@ -177,7 +177,7 @@ public class CodeViewer extends JPanel {
 
     private void handleComingOver() {
         System.out.println("Coming Over selected");
-        databaseManager.updateQuestionsTable(studentID, tableName3, "Went to Student's Desk");
+        databaseManager.updateQuestionsTable(studentID, tableName3, "Went to Student's Desk", 1);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(new QuestionViewer(frame, username));
         frame.revalidate();
@@ -203,7 +203,7 @@ public class CodeViewer extends JPanel {
         if (option == JOptionPane.OK_OPTION) {
             String userResponse = responseField.getText();
             System.out.println("User response: " + userResponse);
-            databaseManager.updateQuestionsTable(studentID, tableName3, userResponse);
+            databaseManager.updateQuestionsTable(studentID, tableName3, userResponse, 1);
             frame.getContentPane().removeAll();
             frame.getContentPane().add(new QuestionViewer(frame, username));
             frame.revalidate();

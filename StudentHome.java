@@ -6,6 +6,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -84,7 +88,7 @@ public class StudentHome extends JPanel {
             this.add(messageLabel, BorderLayout.CENTER);
         } else {
 
-            String url = "jdbc:mysql://10.195.75.116/qclient1";
+            String url = "jdbc:mysql://192.168.1.14/qclient1";
             String user = "root";
             String password = "password";
             String tableName = userName + "_waitTime";
@@ -437,6 +441,62 @@ public class StudentHome extends JPanel {
                         questionTableName = result.replace("_main", "_questions");
 
                         position = databaseManager.getQuestionPosition(questionTableName, userName);
+
+                        Object[] seenMessageStatus = databaseManager.getSeenMessageStatus(questionTableName, userName);
+                        if(seenMessageStatus!= null) {
+                            if ((int) seenMessageStatus[3] == 2) {
+                                String message = "Teacher Removed Your Question";
+                                JTextPane textPane = new JTextPane();
+                                textPane.setEditable(false);
+                                textPane.setFont(new Font("Georgia", Font.PLAIN, 12));
+                                StyledDocument doc = textPane.getStyledDocument();
+                                SimpleAttributeSet boldStyle = new SimpleAttributeSet();
+                                StyleConstants.setBold(boldStyle, true);
+                                StyleConstants.setFontFamily(boldStyle, "Georgia");
+                                SimpleAttributeSet regularStyleSet = new SimpleAttributeSet();
+                                StyleConstants.setBold(regularStyleSet, false);
+                                StyleConstants.setFontFamily(regularStyleSet, "Georgia");
+
+                                try{
+                                    doc.insertString(doc.getLength(), message, boldStyle);
+                                } catch (Exception ex){
+                                    ex.printStackTrace();
+                                }
+
+                                JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
+                                databaseManager.resetSeenSample(questionTableName, userName);
+
+                            } else if ((int) seenMessageStatus[3] == 1) {
+                                String teacherResponse = (String) seenMessageStatus[2];
+                                String message;
+
+                                if(teacherResponse.equals("Went to Student's Desk")){
+                                    message = "Coming Over to Your Desk";
+                                }else{
+                                    message = teacherResponse;
+                                }
+                                JTextPane textPane = new JTextPane();
+                                textPane.setEditable(false);
+                                textPane.setFont(new Font("Georgia", Font.PLAIN, 12));
+                                StyledDocument doc = textPane.getStyledDocument();
+                                SimpleAttributeSet boldStyle = new SimpleAttributeSet();
+                                StyleConstants.setBold(boldStyle, true);
+                                StyleConstants.setFontFamily(boldStyle, "Georgia");
+                                SimpleAttributeSet regularStyleSet = new SimpleAttributeSet();
+                                StyleConstants.setBold(regularStyleSet, false);
+                                StyleConstants.setFontFamily(regularStyleSet, "Georgia");
+
+                                try{
+                                    doc.insertString(doc.getLength(), "Teacher's Response: ", boldStyle);
+                                    doc.insertString(doc.getLength(), message, regularStyleSet);
+                                } catch (Exception ex){
+                                    ex.printStackTrace();
+                                }
+
+                                JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
+                                databaseManager.resetSeenSample(questionTableName, userName);
+                            }
+                        }
                         positionLabel.setText("Position: " + position);
                         if(position==-1)
                         {
@@ -1044,7 +1104,7 @@ public class StudentHome extends JPanel {
                                         result = result.replace("_main", "_questions");
                                     }
 
-                                    databaseManager.updateQuestionsTable(userName, result, "Student Took Back Question");
+                                    databaseManager.updateQuestionsTable(userName, result, "Student Took Back Question", 0);
                                     positionLabel.setText("Position: N/A");
                                 }
                             } catch (DateTimeParseException e1) {

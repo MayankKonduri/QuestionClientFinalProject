@@ -14,7 +14,7 @@ import java.util.List;
 
 public class DatabaseManager {
 
-    private static final String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
+    private static final String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
     private static final String DATABASE_USER = "root";
     private static final String DATABASE_PASSWORD = "password";
     private String userName;
@@ -573,7 +573,7 @@ public class DatabaseManager {
             String insertSQL = "INSERT INTO " + tableName +
                     " (StudentID, QuestionSummary, TimeStamp, IsQuestionActive, Response, AttachedCodeFile, ConsoleOutput, FileName) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-            String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
+            String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
             String DATABASE_USER = "root";
             String DATABASE_PASSWORD = "password";
 
@@ -627,7 +627,7 @@ public class DatabaseManager {
 
             String selectSQL = "SELECT QuestionSummary FROM " + questionTableName + " WHERE StudentID = ? AND IsQuestionActive = 1";
 
-            String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
+            String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
             String DATABASE_USER = "root";
             String DATABASE_PASSWORD = "password";
 
@@ -680,7 +680,7 @@ public class DatabaseManager {
 
             String updateSQL = "UPDATE " + tableName + " SET IsQuestionActive = ? WHERE StudentID = ? AND QuestionSummary = ?";
 
-            String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
+            String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
             String DATABASE_USER = "root";
             String DATABASE_PASSWORD = "password";
 
@@ -884,7 +884,7 @@ public class DatabaseManager {
     }
 
     public void clearQuestionsList(String tableName1) {
-        String sql = "UPDATE " + tableName1 + " SET ConsoleOutput = NULL, AttachedCodeFile = NULL, isQuestionActive = 0, response = 'Teacher Manually Removed Question' WHERE isQuestionActive = 1";
+        String sql = "UPDATE " + tableName1 + " SET ConsoleOutput = NULL, AttachedCodeFile = NULL, isQuestionActive = 0, response = 'Teacher Manually Removed Question', SeenResponse = 2 WHERE isQuestionActive = 1";
 
         try (Connection conn = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -919,15 +919,16 @@ public class DatabaseManager {
         return studentName;
     }
 
-    public void updateQuestionsTable(String studentID, String tableName3, String s) {
+    public void updateQuestionsTable(String studentID, String tableName3, String s, int SeenResponse) {
         System.out.println(s + " Message Received for Student " + studentID + " in Table " + tableName3);
-        String query = "UPDATE " + tableName3 + " SET Response = ?, isQuestionActive = 0, ConsoleOutput = NULL, AttachedCodeFile = NULL WHERE studentID = ? AND isQuestionActive = 1";
+        String query = "UPDATE " + tableName3 + " SET Response = ?, isQuestionActive = 0, ConsoleOutput = NULL, AttachedCodeFile = NULL, SeenResponse = ? WHERE studentID = ? AND isQuestionActive = 1";
 
         try (Connection conn = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(query)) {
 
             pstmt.setString(1, s);
-            pstmt.setString(2, studentID);
+            pstmt.setInt(2, SeenResponse);
+            pstmt.setString(3, studentID);
 
             int rowsUpdated = pstmt.executeUpdate();
 
@@ -967,5 +968,40 @@ public class DatabaseManager {
 
         return result;
     }
+    public Object[] getSeenMessageStatus(String questionTableName, String userName) {
+        Object[] result = new Object[4];
+            String query = "SELECT StudentID, QuestionSummary, TimeStamp, Response, SeenResponse " + "FROM " + questionTableName + " " + "WHERE StudentID = ? AND SeenResponse != 0";
 
+        try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+            PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, userName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    result[0] = rs.getString("QuestionSummary");
+                    Time timeStamp = rs.getTime("TimeStamp");
+                    result[1] = timeStamp != null ? timeStamp.toString() : null;
+                    result[2] = rs.getString("Response");
+                    result[3] = rs.getInt("SeenResponse");
+                } else {
+                    result = null;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+    public void resetSeenSample(String questionTableName, String studentID){
+        String query = "UPDATE " + questionTableName + " SET SeenResponse = 0 WHERE StudentID = ? AND SeenResponse != 0";
+        try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+            PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, studentID);
+            stmt.executeUpdate();
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
 }
