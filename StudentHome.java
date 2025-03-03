@@ -74,6 +74,7 @@ public class StudentHome extends JPanel {
     public ImageIcon imageIcon;
     public Image image;
     public boolean readMessage;
+    JButton homeButton;
     public StudentHome(JFrame frame, String userName) throws SQLException {
         this.frame = frame;
         this.userName = userName;
@@ -92,7 +93,7 @@ public class StudentHome extends JPanel {
             this.add(messageLabel, BorderLayout.CENTER);
         } else {
 
-            String url = "jdbc:mysql://192.168.1.14/qclient1";
+            String url = "jdbc:mysql://10.195.75.116/qclient1";
             String user = "root";
             String password = "password";
             String tableName = userName + "_waitTime";
@@ -218,7 +219,16 @@ public class StudentHome extends JPanel {
                             {""}
                     };
 
-                    questionTable = new JTable(rowData, columnNames);
+                    DefaultTableModel model = new DefaultTableModel(rowData, columnNames){
+                        @Override
+                        public boolean isCellEditable(int row, int column) {
+                            return false;
+                        }
+                    };
+                    questionTable = new JTable(model);
+                    questionTable.setRowSelectionAllowed(false);
+                    questionTable.setColumnSelectionAllowed(false);
+                    questionTable.setCellSelectionEnabled(false);
 
                     questionTable.getTableHeader().setFont(new Font("Georgia", Font.BOLD, 14));
 
@@ -370,7 +380,7 @@ public class StudentHome extends JPanel {
         JPanel homePanel = new JPanel();
         homePanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 
-        JButton homeButton = new JButton("Home");
+        homeButton = new JButton("Home");
         homeButton.setFont(new Font("Georgia", Font.BOLD, 10));
         homePanel.add(homeButton);
 
@@ -509,6 +519,11 @@ public class StudentHome extends JPanel {
         messagePopup.setUndecorated(false);
         messagePopup.setResizable(false);
         messagePopup.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        //frame.setEnabled(false);
+        //frame.setFocusableWindowState(false);
+        addQuestionButton.setEnabled(false);
+        homeButton.setEnabled(false);
+        removeQuestionButton.setEnabled(false);
 
         messagePopup.addMouseListener(new MouseAdapter() {
             @Override
@@ -549,6 +564,11 @@ public class StudentHome extends JPanel {
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //frame.setEnabled(true);
+                //frame.setFocusableWindowState(true);
+                addQuestionButton.setEnabled(true);
+                homeButton.setEnabled(true);
+                removeQuestionButton.setEnabled(true);
                 messagePopup.dispose();
             }
         });
@@ -621,27 +641,95 @@ public class StudentHome extends JPanel {
         todayThreeMessageStatus.sort((a, b) -> ((Timestamp) b[4]).compareTo((Timestamp) a[4]));
         for(Object[] row : todayThreeMessageStatus){
             if(((String) row[2]).equals("Teacher Manually Removed Question")){
-                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
-            } else if(((String) row[2]).equals("Teacher Went To Student's Desk")){
-                addRowToTable(tableModel, (String) row[0], "Coming Over");
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>Question Removed</font></html>");
+            } else if(((String) row[2]).equals("Went to Student's Desk")){
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>Coming Over</font></html>");
             } else if(((String) row[2]).equals("Student Took Back Question")){
-                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>Question Removed</font></html>");
             } else{
-                addRowToTable(tableModel, (String) row[0], (String) row[2]);
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>" + (String) row[2] + "</font></html>");
             }
         }
         todayAllButThreeMessageStatus.sort((a, b) -> ((Timestamp) b[4]).compareTo((Timestamp) a[4]));
         for(Object[] row : todayAllButThreeMessageStatus){
             if(((String) row[2]).equals("Teacher Manually Removed Question")){
-                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
+                addRowToTable(tableModel, "<html><font color='red'>" + (String) row[0] + "</font></html>", "<html><font color='red'>Question Removed</font></html>");
             } else if(((String) row[2]).equals("Went to Student's Desk")){
                 addRowToTable(tableModel, (String) row[0], "Coming Over");
             } else if(((String) row[2]).equals("Student Took Back Question")){
-                addRowToTable(tableModel, (String) row[0], "<html><font color='red'>Question Removed</font></html>");
+                addRowToTable(tableModel, "<html><font color='red'>" + (String) row[0] + "</font></html>", "<html><font color='red'>Question Removed</font></html>");
             } else{
                 addRowToTable(tableModel, (String) row[0], (String) row[2]);
             }
         }
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int row = table.getSelectedRow();
+                    if (row != -1) {
+                        String QuestionSummary = tableModel.getValueAt(row, 0).toString();
+                        String replaceQSummary = QuestionSummary.replaceAll("<[^>]+>","");
+                        String Response = tableModel.getValueAt(row, 1).toString();
+                        String replaceResponse = Response.replaceAll("<[^>]+>","");
+                        JTextPane textPane = new JTextPane();
+                            textPane.setContentType("text/plain");
+                            textPane.setEditable(false);
+                            textPane.setFont(new Font("Georgia", Font.PLAIN, 12));
+
+                            StyledDocument doc = textPane.getStyledDocument();
+
+                            SimpleAttributeSet boldStyle = new SimpleAttributeSet();
+                            StyleConstants.setBold(boldStyle, true);
+                            StyleConstants.setFontFamily(boldStyle, "Georgia");
+
+                            SimpleAttributeSet regularStyle = new SimpleAttributeSet();
+                            StyleConstants.setBold(regularStyle, false);
+                            StyleConstants.setFontFamily(regularStyle, "Georgia");
+
+                            try {
+
+                                doc.insertString(doc.getLength(), "Question Summary: ", boldStyle);
+                                doc.insertString(doc.getLength(), replaceQSummary + "\n", regularStyle);
+
+                                doc.insertString(doc.getLength(), "Response: ", boldStyle);
+                                doc.insertString(doc.getLength(), replaceResponse, regularStyle);
+
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                            questionTable.setFocusable(false);
+                            JOptionPane.showOptionDialog(
+                                    frame,
+                                    new JScrollPane(textPane),
+                                    "Question Details",
+                                    JOptionPane.DEFAULT_OPTION,
+                                    JOptionPane.INFORMATION_MESSAGE,
+                                    null,
+                                    null,
+                                    null
+                            );
+
+                            table.clearSelection();
+                    }
+                }
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //        JPanel panelForScrool = new JPanel();
 //        panelForScrool.setLayout(new BoxLayout(panelForScrool, BoxLayout.Y_AXIS));
@@ -669,7 +757,7 @@ public class StudentHome extends JPanel {
         frame.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentMoved(ComponentEvent e) {
-                messagePopup.setLocation((frame.getX() + frame.getWidth()/2)-20, frame.getY()+60);
+                messagePopup.setLocation((frame.getX() + frame.getWidth()/2)-30, frame.getY()+60);
             }
         });
         messagePopup.setVisible(true);

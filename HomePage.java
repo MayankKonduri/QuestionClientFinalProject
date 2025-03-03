@@ -154,7 +154,7 @@ public class HomePage extends JPanel {
 
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            connection = DriverManager.getConnection("jdbc:mysql://192.168.1.14/qclient1", "root", "password");
+            connection = DriverManager.getConnection("jdbc:mysql://10.195.75.116/qclient1", "root", "password");
 
             statement = connection.createStatement();
             String checkDatabaseSQL = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'qclient1'";
@@ -195,7 +195,7 @@ public class HomePage extends JPanel {
 
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            connection = DriverManager.getConnection("jdbc:mysql://192.168.1.14/qclient1", "root", "password");
+            connection = DriverManager.getConnection("jdbc:mysql://10.195.75.116/qclient1", "root", "password");
 
             statement = connection.createStatement();
             String checkDatabaseSQL = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'qclient1'";
@@ -237,7 +237,7 @@ public class HomePage extends JPanel {
 
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            connection = DriverManager.getConnection("jdbc:mysql://192.168.1.14/qclient1", "root", "password");
+            connection = DriverManager.getConnection("jdbc:mysql://10.195.75.116/qclient1", "root", "password");
 
             statement = connection.createStatement();
             String checkDatabaseSQL = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'qclient1'";
