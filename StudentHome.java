@@ -5,6 +5,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -65,6 +66,8 @@ public class StudentHome extends JPanel {
     JTable questionTable;
     private Thread refreshThread;
     private volatile boolean running = true;
+    private Thread refreshThread1;
+    private volatile boolean running1 = false;
     public boolean successful_1;
     String className;
     private int position;
@@ -75,6 +78,8 @@ public class StudentHome extends JPanel {
     public Image image;
     public boolean readMessage;
     JButton homeButton;
+    ArrayList<Object[]> threeMessageStatus;
+    ArrayList<Object[]> allButThreesMessageStatus;
     public StudentHome(JFrame frame, String userName) throws SQLException {
         this.frame = frame;
         this.userName = userName;
@@ -413,10 +418,11 @@ public class StudentHome extends JPanel {
         imageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ArrayList<Object[]> threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
-                ArrayList<Object[]> allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
+                threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
+                allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
                 updateImageButtonUI(true);
                 showPopUp(frame, threeMessageStatus, allButThreesMessageStatus, questionTable, userName);
+                startAutoRefreshThreadPopUp(frame, threeMessageStatus, allButThreesMessageStatus, questionTable, userName);
                 databaseManager.resetSeenSample(questionTableName, userName, 0);
             }
         });
@@ -484,6 +490,7 @@ public class StudentHome extends JPanel {
         }
     }
     private void showPopUp(JFrame frame, ArrayList<Object[]> threeMessageStatus, ArrayList<Object[]> allButThreesMessageStatus, JTable questionTable, String userName) {
+        System.out.println("Testing Thread Popup");
         ArrayList<Object[]> todayThreeMessageStatus = new ArrayList<>();
         ArrayList<Object[]> todayAllButThreeMessageStatus = new ArrayList<>();
         System.out.println("Number of Unread Threes: " + threeMessageStatus.size() + " and Number of Read Zeroes: " + allButThreesMessageStatus.size());
@@ -566,6 +573,7 @@ public class StudentHome extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 //frame.setEnabled(true);
                 //frame.setFocusableWindowState(true);
+                stopAutoRefreshThreadPopUp();
                 addQuestionButton.setEnabled(true);
                 homeButton.setEnabled(true);
                 removeQuestionButton.setEnabled(true);
@@ -788,6 +796,32 @@ public class StudentHome extends JPanel {
         }
     }
 
+    private void startAutoRefreshThreadPopUp(JFrame frame, ArrayList<Object[]> threeMessageStatus, ArrayList<Object[]> allButThreesMessageStatus, JTable questionTable, String userName) {
+        running1 = true;
+        refreshThread1 = new Thread(() -> {
+            while (running1) {
+                try {
+                    ArrayList<Object[]> threeMessageStatus1 = databaseManager.getThrees(questionTableName, userName);
+                    ArrayList<Object[]> allButThreesMessageStatus1 = databaseManager.getAllButThrees(questionTableName, userName);
+                    showPopUp(frame, threeMessageStatus1, allButThreesMessageStatus1, questionTable, userName);
+                    System.out.println("ThreeMessageStatus " + threeMessageStatus1.size());
+                    System.out.println("AllButThreeMessageStatus " + allButThreesMessageStatus1.size());
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        refreshThread1.start();
+    }
+
+    private void stopAutoRefreshThreadPopUp() {
+        running1 = false;
+        if (refreshThread1 != null) {
+            refreshThread1.interrupt();
+        }
+    }
+
     public void updateStudentDashboard() {
 
         ArrayList<String[]> results = null;
@@ -812,7 +846,7 @@ public class StudentHome extends JPanel {
                         waitTimeOfClass = waitTime;
                         periodNumber = extractNumberFromTableName(result);
                         questionTableName = result.replace("_main", "_questions");
-
+                        System.out.println(running1);
                         position = databaseManager.getQuestionPosition(questionTableName, userName);
 
                         Object[] seenMessageStatus = databaseManager.getSeenMessageStatus(questionTableName, userName);
@@ -838,7 +872,10 @@ public class StudentHome extends JPanel {
                                     ex.printStackTrace();
                                 }
                                 //updateImageButtonUI(false);
-                                JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
+                                System.out.println("1" + running1);
+                                if(!running1) {
+                                    JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
+                                }
                                 databaseManager.resetSeenSample(questionTableName, userName, 0);
                             } else if ((int) seenMessageStatus[3] == 1) {
                                 String teacherResponse = (String) seenMessageStatus[2];
@@ -868,7 +905,10 @@ public class StudentHome extends JPanel {
                                     ex.printStackTrace();
                                 }
                                 updateImageButtonUI(false);
-                                JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
+                                System.out.println("2" + running1);
+                                if(!running1) {
+                                    JOptionPane.showMessageDialog(null, textPane, "Notification", JOptionPane.INFORMATION_MESSAGE);
+                                }
                                 databaseManager.resetSeenSample(questionTableName, userName, 3);
                             }
                         } else if (threeMessageStatus.size()>0){
