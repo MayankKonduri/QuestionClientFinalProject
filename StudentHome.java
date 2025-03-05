@@ -103,7 +103,7 @@ public class StudentHome extends JPanel {
             this.add(messageLabel, BorderLayout.CENTER);
         } else {
 
-            String url = "jdbc:mysql://192.168.1.14/qclient1";
+            String url = "jdbc:mysql://10.195.75.116/qclient1";
             String user = "root";
             String password = "password";
             String tableName = userName + "_waitTime";
@@ -457,8 +457,11 @@ public class StudentHome extends JPanel {
     private void updateTableQ(){
         int rowcount = tableModel.getRowCount();
         int rowCountTemp = 0;
-        threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
-        allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
+        ArrayList<Object[]> temp1 = threeMessageStatus;
+        ArrayList<Object[]> temp2 = allButThreesMessageStatus;
+        //threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
+        //allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
+        System.out.println("1: " + temp1.size() + " 2: " + temp2.size() + " 3: " + threeMessageStatus.size() + " 4: " + allButThreesMessageStatus.size());
         tableModel.setRowCount(0);
         System.out.println("Testing Thread Popup");
         ArrayList<Object[]> todayThreeMessageStatus = new ArrayList<>();

@@ -14,7 +14,7 @@ import java.util.List;
 
 public class DatabaseManager {
 
-    private static final String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
+    private static final String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
     private static final String DATABASE_USER = "root";
     private static final String DATABASE_PASSWORD = "password";
     private String userName;
@@ -573,7 +573,7 @@ public class DatabaseManager {
             String insertSQL = "INSERT INTO " + tableName +
                     " (StudentID, QuestionSummary, TimeStamp, IsQuestionActive, Response, AttachedCodeFile, ConsoleOutput, FileName, DateOfQuestion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-            String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
+            String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
             String DATABASE_USER = "root";
             String DATABASE_PASSWORD = "password";
 
@@ -630,7 +630,7 @@ public class DatabaseManager {
 
             String selectSQL = "SELECT QuestionSummary FROM " + questionTableName + " WHERE StudentID = ? AND IsQuestionActive = 1";
 
-            String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
+            String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
             String DATABASE_USER = "root";
             String DATABASE_PASSWORD = "password";
 
@@ -683,7 +683,7 @@ public class DatabaseManager {
 
             String updateSQL = "UPDATE " + tableName + " SET IsQuestionActive = ? WHERE StudentID = ? AND QuestionSummary = ?";
 
-            String DATABASE_URL = "jdbc:mysql://192.168.1.14/qclient1";
+            String DATABASE_URL = "jdbc:mysql://10.195.75.116/qclient1";
             String DATABASE_USER = "root";
             String DATABASE_PASSWORD = "password";
 
