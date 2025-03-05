@@ -80,6 +80,11 @@ public class StudentHome extends JPanel {
     JButton homeButton;
     ArrayList<Object[]> threeMessageStatus;
     ArrayList<Object[]> allButThreesMessageStatus;
+    DefaultTableModel tableModel;
+    JTable table;
+    JTableHeader tableHeader;
+    JScrollPane scrollPane;
+    JButton closeButton;
     public StudentHome(JFrame frame, String userName) throws SQLException {
         this.frame = frame;
         this.userName = userName;
@@ -98,7 +103,7 @@ public class StudentHome extends JPanel {
             this.add(messageLabel, BorderLayout.CENTER);
         } else {
 
-            String url = "jdbc:mysql://10.195.75.116/qclient1";
+            String url = "jdbc:mysql://192.168.1.14/qclient1";
             String user = "root";
             String password = "password";
             String tableName = userName + "_waitTime";
@@ -449,6 +454,68 @@ public class StudentHome extends JPanel {
         startAutoRefreshThread();
     }
 
+    private void updateTableQ(){
+        int rowcount = tableModel.getRowCount();
+        int rowCountTemp = 0;
+        threeMessageStatus = databaseManager.getThrees(questionTableName,userName);
+        allButThreesMessageStatus = databaseManager.getAllButThrees(questionTableName, userName);
+        tableModel.setRowCount(0);
+        System.out.println("Testing Thread Popup");
+        ArrayList<Object[]> todayThreeMessageStatus = new ArrayList<>();
+        ArrayList<Object[]> todayAllButThreeMessageStatus = new ArrayList<>();
+        System.out.println("Number of Unread Threes: " + threeMessageStatus.size() + " and Number of Read Zeroes: " + allButThreesMessageStatus.size());
+        System.out.println("Image Clicked");
+        int countTodayThrees = 0;
+        int countTodayZeroes = 0;
+
+        LocalDate currentDate = LocalDate.now();
+        for(int i=0;i<threeMessageStatus.size();i++){
+            Timestamp timestamp = (Timestamp) threeMessageStatus.get(i)[4];
+            LocalDate messageDate = timestamp.toLocalDateTime().toLocalDate();
+            if (messageDate.equals(currentDate)) {
+                countTodayThrees++;
+                todayThreeMessageStatus.add(threeMessageStatus.get(i));
+            }
+        }
+        for(int i=0;i<allButThreesMessageStatus.size();i++){
+            Timestamp timestamp = (Timestamp) allButThreesMessageStatus.get(i)[4];
+            LocalDate messageDate = timestamp.toLocalDateTime().toLocalDate();
+            if (messageDate.equals(currentDate)) {
+                countTodayZeroes++;
+                todayAllButThreeMessageStatus.add(allButThreesMessageStatus.get(i));
+            }
+        }
+        todayThreeMessageStatus.sort((a, b) -> ((Timestamp) b[4]).compareTo((Timestamp) a[4]));
+        for(Object[] row : todayThreeMessageStatus){
+            if(((String) row[2]).equals("Teacher Manually Removed Question")){
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>Question Removed</font></html>");
+            } else if(((String) row[2]).equals("Went to Student's Desk")){
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>Coming Over</font></html>");
+            } else if(((String) row[2]).equals("Student Took Back Question")){
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>Question Removed</font></html>");
+            } else{
+                addRowToTable(tableModel, "<html><font color='blue'>" + (String) row[0] + "</font></html>", "<html><font color='blue'>" + (String) row[2] + "</font></html>");
+            }
+        }
+        todayAllButThreeMessageStatus.sort((a, b) -> ((Timestamp) b[4]).compareTo((Timestamp) a[4]));
+        for(Object[] row : todayAllButThreeMessageStatus){
+            if(((String) row[2]).equals("Teacher Manually Removed Question")){
+                addRowToTable(tableModel, "<html><font color='red'>" + (String) row[0] + "</font></html>", "<html><font color='red'>Question Removed</font></html>");
+            } else if(((String) row[2]).equals("Went to Student's Desk")){
+                addRowToTable(tableModel, (String) row[0], "Coming Over");
+            } else if(((String) row[2]).equals("Student Took Back Question")){
+                addRowToTable(tableModel, "<html><font color='red'>" + (String) row[0] + "</font></html>", "<html><font color='red'>Question Removed</font></html>");
+            } else{
+                addRowToTable(tableModel, (String) row[0], (String) row[2]);
+            }
+        }
+        rowCountTemp = tableModel.getRowCount();
+        if(rowCountTemp>rowcount){
+          stopAutoRefreshThreadPopUp();
+        }
+        System.out.println("Row Count: " + tableModel.getRowCount());
+    }
+
     private void updateImageButtonUI(boolean readMessage) {
         if(readMessage){
             //imagePanel.remove(imageButton);
@@ -554,7 +621,7 @@ public class StudentHome extends JPanel {
         contentPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));  // Set a black border with thickness 2
         contentPanel.setLayout(null);
 
-        JButton closeButton = new JButton("X");
+        closeButton = new JButton("X");
         closeButton.setForeground(Color.BLACK);
         closeButton.setBackground(Color.WHITE);
         closeButton.setFont(new Font("Verdana",Font.BOLD,8));
@@ -577,7 +644,9 @@ public class StudentHome extends JPanel {
                 addQuestionButton.setEnabled(true);
                 homeButton.setEnabled(true);
                 removeQuestionButton.setEnabled(true);
+                updateImageButtonUI(true);
                 messagePopup.dispose();
+                databaseManager.resetSeenSample(questionTableName, userName, 0);
             }
         });
 
@@ -608,18 +677,18 @@ public class StudentHome extends JPanel {
         });
 
         String[] columns = {"Q. Summary", "Response"};
-        DefaultTableModel tableModel = new DefaultTableModel(columns,0){
+        tableModel = new DefaultTableModel(columns,0){
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        JTable table = new JTable(tableModel);
+        table = new JTable(tableModel);
         table.setFillsViewportHeight(true);
         table.setFont(new Font("Georgia", Font.PLAIN, 10));
         table.setRowHeight(20);
 
-        JTableHeader tableHeader = table.getTableHeader();
+        tableHeader = table.getTableHeader();
         tableHeader.setFont(new Font("Georgia",Font.BOLD,11));
         tableHeader.setReorderingAllowed(false);
         tableHeader.setPreferredSize(new Dimension(tableHeader.getWidth(), 25));
@@ -631,7 +700,7 @@ public class StudentHome extends JPanel {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane = new JScrollPane(table);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(14, 0));
@@ -801,11 +870,9 @@ public class StudentHome extends JPanel {
         refreshThread1 = new Thread(() -> {
             while (running1) {
                 try {
-                    ArrayList<Object[]> threeMessageStatus1 = databaseManager.getThrees(questionTableName, userName);
-                    ArrayList<Object[]> allButThreesMessageStatus1 = databaseManager.getAllButThrees(questionTableName, userName);
-                    showPopUp(frame, threeMessageStatus1, allButThreesMessageStatus1, questionTable, userName);
-                    System.out.println("ThreeMessageStatus " + threeMessageStatus1.size());
-                    System.out.println("AllButThreeMessageStatus " + allButThreesMessageStatus1.size());
+                    updateTableQ();
+                    repaint();
+                    revalidate();
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
